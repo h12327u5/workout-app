@@ -30,6 +30,9 @@ button.pt{cursor:pointer}
 .bt{display:flex;gap:6px}
 .gp{font-size:12px;font-weight:600;color:#374151}
 .gs{width:100%;font-size:14px}
+.row.hid{opacity:.6;background:#f6f7f9}
+.hd{font-size:12px;font-weight:700;color:#6b7280;border:1px solid var(--bd);border-radius:999px;padding:3px 8px;background:#fff}
+.vb{font-size:13px;padding:6px 10px}
 button{font:inherit;border:1px solid var(--bd);background:var(--card);color:var(--tx);border-radius:10px;padding:8px 12px;cursor:pointer}
 button.p{background:var(--ac);border-color:var(--ac);color:#fff}
 button.p.on{background:#fff;color:var(--ac)}
@@ -139,7 +142,7 @@ function members(g){return g?S.ex.filter(function(e){return e.grp===g}):[]}
 function glabel(g){var n=members(g).map(function(e){return e.name}).join('・');return n.length>28?n.slice(0,28)+'…':n}
 function gcolor(g){var h=0;for(var i=0;i<g.length;i++)h=(h*31+g.charCodeAt(i))%997;return PAL[h%PAL.length]}
 function grpInfo(ex){
-  var g=ex.grp||'',others=members(g).filter(function(e){return e!==ex}),r={style:'',line:'',sel:''};
+  var g=ex.grp||'',others=members(g).filter(function(e){return e!==ex&&(edit||!e.hid)}),r={style:'',line:'',sel:''};
   if(others.length){
     r.style=' style="border-left:5px solid '+gcolor(g)+'"';
     r.line='<span class="gp">同じ扱い：'+others.map(function(e){return esc(e.name)}).join('・')+'</span>';
@@ -154,11 +157,14 @@ function cmpDays(x,y){if(x===y)return 0;if(x===Infinity)return -1;if(y===Infinit
 function sortList(){
   var eff={},nm={};
   S.ex.forEach(function(e){
+    if(e.hid)return;
     var k=e.grp||e.id,v=since(e);
     eff[k]=eff[k]===undefined?v:Math.min(eff[k],v);
     if(nm[k]===undefined||e.name.localeCompare(nm[k],'ja')<0)nm[k]=e.name;
   });
   return S.ex.slice().sort(function(a,b){
+    if(!!a.hid!==!!b.hid)return a.hid?1:-1;
+    if(a.hid)return a.name.localeCompare(b.name,'ja');
     var ka=a.grp||a.id,kb=b.grp||b.id;
     if(ka!==kb){
       var c=cmpDays(eff[ka],eff[kb]);if(c)return c;
@@ -183,23 +189,25 @@ function toggle(id){
 }
 function addEx(name,part){
   name=name.trim();if(!name)return false;
-  if(S.ex.some(function(e){return e.name===name}))return false;
+  var dup=S.ex.find(function(e){return e.name===name});
+  if(dup){if(dup.hid){dup.hid=false;save();return true}return false}
   S.ex.push({id:'e'+Date.now()+Math.floor(Math.random()*1000),name:name,part:part||guess(name),grp:'',dates:[]});
   save();return true;
 }
 function row(ex){
   var gx=grpInfo(ex),n=since(ex),on=ex.dates.indexOf(dt.value)>=0,pl=ex.part||'未分類';
   var badge=edit?'<select class="pt" data-p="'+ex.id+'">'+M.map(function(m){return '<option'+(m===ex.part?' selected':'')+'>'+m+'</option>'}).join('')+(ex.part?'':'<option selected>未分類</option>')+'</select>':'<span class="pt">'+pl+'</span>';
-  return '<div class="row '+(on?'done':'')+'"'+gx.style+'><div class="ic '+(BACK.indexOf(ex.part)>=0?'b':M.indexOf(ex.part)>=0?'f':'')+'">'+vl(ex.part)+icon(ex.part)+'</div><div class="nm"><span>'+esc(ex.name)+'</span>'+badge+gx.line+(edit?gx.sel:'')+'</div><div class="rt"><div class="d">'+label(n)+'</div><div class="bt"><button class="p'+(on?' on':'')+'" data-t="'+ex.id+'">'+(on?'✓ 済':'やった')+'</button>'+
+  return '<div class="row '+(on?'done':'')+(ex.hid?' hid':'')+'"'+gx.style+'><div class="ic '+(BACK.indexOf(ex.part)>=0?'b':M.indexOf(ex.part)>=0?'f':'')+'">'+vl(ex.part)+icon(ex.part)+'</div><div class="nm"><span>'+esc(ex.name)+'</span>'+badge+(ex.hid?'<span class="hd">非表示</span>':'')+gx.line+(edit?gx.sel+'<button class="vb" data-v="'+ex.id+'">'+(ex.hid?'表示に戻す':'非表示にする')+'</button>':'')+'</div><div class="rt"><div class="d">'+label(n)+'</div><div class="bt"><button class="p'+(on?' on':'')+'" data-t="'+ex.id+'">'+(on?'✓ 済':'やった')+'</button>'+
   (edit?'<button class="x" data-x="'+ex.id+'">✕</button>':'')+'</div></div></div>';
 }
 function render(){
-  var sorted=sortList();
-    document.getElementById('all').innerHTML=sorted.length?sorted.map(row).join(''):'<div class="sub">種目を追加してください</div>';
+  var sorted=sortList(),shown=edit?sorted:sorted.filter(function(e){return !e.hid});
+  document.getElementById('all').innerHTML=shown.length?shown.map(row).join(''):'<div class="sub">'+(S.ex.length?'表示する種目がありません。「編集」で表示に戻せます。':'種目を追加してください')+'</div>';
   document.getElementById('ed').textContent=edit?'編集を終了':'編集';
 }
 document.body.addEventListener('click',function(e){
   var t=e.target.closest('[data-t]');if(t){toggle(t.getAttribute('data-t'));return}
+  var v=e.target.closest('[data-v]');if(v){var vq=find(v.getAttribute('data-v'));if(vq){vq.hid=!vq.hid;save();render()}return}
   var x=e.target.closest('[data-x]');
   if(x){pend=x.getAttribute('data-x');var ex=find(pend);
     document.getElementById('mt').textContent='「'+ex.name+'」を削除しますか？';
@@ -232,7 +240,7 @@ function importText(txt){
       var nm=x.name.trim().slice(0,30);if(!nm)return;
       var ds=(Array.isArray(x.dates)?x.dates:[]).filter(function(d){return /^\d{4}-\d{2}-\d{2}$/.test(d)});
       var t=S.ex.find(function(e){return e.name===nm});
-      if(!t){t={id:'e'+Date.now()+Math.floor(Math.random()*1e6),name:nm,part:M.indexOf(x.part)>=0?x.part:guess(nm),dates:[]};S.ex.push(t);ae++}
+      if(!t){t={id:'e'+Date.now()+Math.floor(Math.random()*1e6),name:nm,part:M.indexOf(x.part)>=0?x.part:guess(nm),hid:!!x.hid,dates:[]};S.ex.push(t);ae++}
       else if(!t.part&&M.indexOf(x.part)>=0)t.part=x.part;
       ds.forEach(function(d){if(t.dates.indexOf(d)<0){t.dates.push(d);ad++}});
       t.dates.sort();
