@@ -1,4 +1,4 @@
-var CACHE='workout-v2';
+var CACHE='workout-v5';
 var FILES=['./','index.html','manifest.webmanifest','icon-192.png','icon-512.png'];
 self.addEventListener('install',function(e){
   e.waitUntil(caches.open(CACHE).then(function(c){return c.addAll(FILES)}).then(function(){return self.skipWaiting()}));
@@ -16,5 +16,12 @@ self.addEventListener('fetch',function(e){
       return res;
     }).catch(function(){return hit});
     return hit||net;
+  }));
+});
+self.addEventListener('notificationclick',function(e){
+  e.notification.close();
+  e.waitUntil(self.clients.matchAll({type:'window',includeUncontrolled:true}).then(function(cs){
+    for(var i=0;i<cs.length;i++){if('focus' in cs[i])return cs[i].focus()}
+    return self.clients.openWindow('./');
   }));
 });

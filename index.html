@@ -33,6 +33,44 @@ button.pt{cursor:pointer}
 .row.hid{opacity:.6;background:#f6f7f9}
 .hd{font-size:12px;font-weight:700;color:#6b7280;border:1px solid var(--bd);border-radius:999px;padding:3px 8px;background:#fff}
 .vb{font-size:13px;padding:6px 10px}
+input[type=password]{font:inherit;color:var(--tx);background:#fff;border:1px solid var(--bd);border-radius:10px;padding:8px 10px;min-width:0;flex:1 1 100%}
+#cr{flex:1 1 100%}
+details{margin-top:8px;font-size:13px;color:var(--sub)}
+details summary{cursor:pointer;font-weight:600}
+input[type=time]{font:inherit;color:var(--tx);background:#fff;border:1px solid var(--bd);border-radius:10px;padding:8px 10px}
+.nbn{position:fixed;left:12px;right:12px;top:calc(env(safe-area-inset-top,0px) + 12px);z-index:20;background:var(--ac);color:#fff;border-radius:14px;padding:14px 16px;display:flex;align-items:center;gap:12px;box-shadow:0 8px 24px rgba(0,0,0,.25);font-weight:600}
+.nbn[hidden]{display:none}
+.nbn button{margin-left:auto;background:#fff;color:var(--ac);border-color:#fff;flex:none}
+#nbt{flex:1}
+.stc{display:flex;flex-wrap:wrap;gap:8px;margin-top:6px}
+.sc{display:inline-flex;align-items:center;gap:6px;padding:8px 14px;border-radius:999px;font-size:15px}
+.sc i{width:10px;height:10px;border-radius:50%;background:var(--col)}
+.sc.on{background:var(--col);border-color:var(--col);color:#fff}
+.sc.on i{background:#fff}
+.ser{display:flex;align-items:center;gap:8px;margin-bottom:8px}
+.ser input{flex:1}
+.sd{width:12px;height:12px;border-radius:50%;flex:none}
+.dots{display:flex;gap:3px}
+.dots i{width:7px;height:7px;border-radius:50%;display:block}
+.dl{font-size:20px;font-weight:700}
+.dl small{font-size:12px;font-weight:700;color:#fff;background:var(--ac);border-radius:999px;padding:3px 8px;margin-left:8px;vertical-align:middle}
+#cb.on{background:var(--ac);border-color:var(--ac);color:#fff}
+.cal{display:grid;grid-template-rows:0fr;visibility:hidden;transition:grid-template-rows .25s ease,margin-top .25s ease,visibility 0s .25s}
+.cal.open{grid-template-rows:1fr;visibility:visible;margin-top:10px;transition:grid-template-rows .25s ease,margin-top .25s ease,visibility 0s}
+.cal>div{overflow:hidden;min-height:0}
+.cbox{border:1px solid var(--bd);border-radius:14px;padding:10px;background:#fff}
+.chd{display:flex;align-items:center;justify-content:space-between;margin-bottom:6px}
+.chd b{font-size:16px}
+.cg{display:grid;grid-template-columns:repeat(7,1fr);gap:2px;text-align:center}
+.cw{font-size:12px;font-weight:700;color:var(--sub);padding:4px 0}
+.cw.su,.cd.su{color:#dc2626}
+.cw.sa,.cd.sa{color:#2563eb}
+.cd{height:62px;border:0;border-radius:10px;background:transparent;padding:4px 0 0;display:flex;flex-direction:column;align-items:center;gap:2px;font-size:15px}
+.cd.out{opacity:.35}
+.cd .n{width:26px;height:26px;line-height:26px;border-radius:50%}
+.cd.td .n{background:var(--ac);color:#fff}
+.cd.sel{outline:2px solid var(--ac);background:var(--acbg)}
+.cd .p{font-size:11px;font-weight:700;color:#fff;background:var(--ac);border-radius:999px;padding:1px 7px;line-height:1.3}
 button{font:inherit;border:1px solid var(--bd);background:var(--card);color:var(--tx);border-radius:10px;padding:8px 12px;cursor:pointer}
 button.p{background:var(--ac);border-color:var(--ac);color:#fff}
 button.p.on{background:#fff;color:var(--ac)}
@@ -47,12 +85,17 @@ button.pt{padding:4px 8px}
 .bar{display:flex;gap:8px;align-items:center;margin-top:10px;flex-wrap:wrap}
 input[type=text],input[type=date],select{font:inherit;color:var(--tx);background:#fff;border:1px solid var(--bd);border-radius:10px;padding:8px 10px;min-width:0}
 input[type=text]{flex:1}
-.cnt{font-weight:700;color:var(--ac)}
+.cnt{font-weight:700;font-size:20px;color:var(--ac)}
 </style></head>
 <body><main>
-<div class="bar"><input type="date" id="dt"></div>
+<div class="bar" style="margin-top:0"><span class="dl" id="dl"></span><span class="cnt" id="cnt" style="margin-left:auto"></span></div>
+<div class="bar"><button id="cb" aria-expanded="false">Calendar</button><button id="dp" aria-label="前の日">‹</button><button id="dn" aria-label="次の日">›</button><button id="tb" hidden>今日</button><input type="date" id="dt" hidden></div>
+<div class="cal" id="cal"><div id="calin"></div></div>
+<div class="sub" style="margin-top:12px">行った店舗</div>
+<div class="stc" id="stc"></div>
+<div id="ste"></div>
 
-<div id="all"></div>
+<div id="all" style="margin-top:14px"></div>
 <div class="bar"><button id="ed"></button></div>
 
 <h2>種目を追加</h2>
@@ -63,6 +106,17 @@ input[type=text]{flex:1}
 <h2>同期</h2>
 <div class="bar" style="margin-top:0"><button id="exp">Out</button><button id="impb">In</button><input type="file" id="imp" accept=".json,application/json" hidden></div>
 <div class="sub" id="sm" style="margin-top:8px"></div>
+<h2>クラウド同期</h2>
+<div class="sub" id="cs" style="margin-top:0"></div>
+<div class="bar"><input type="text" id="cr" placeholder="ユーザー名/リポジトリ名" autocomplete="off" autocapitalize="off"><input type="password" id="ct" placeholder="トークン" autocomplete="off"></div>
+<div class="bar"><button class="p" id="cc">接続</button><button id="cn" hidden>今すぐ同期</button><button id="cx" hidden>切断</button></div>
+<details><summary>設定のしかた</summary>
+<div style="margin-top:6px;line-height:1.7">1. GitHubで、記録専用の「プライベート」リポジトリを新しく作ります（例：workout-data）。公開（Public）にはしないでください。<br>2. GitHubの Settings → Developer settings → Personal access tokens → Fine-grained tokens で、新しいトークンを作ります。対象はそのリポジトリだけ、権限は Contents: Read and write だけにします。<br>3. 上の欄に「ユーザー名/リポジトリ名」とトークンを入れて「接続」を押します。2台目以降の端末も、同じ手順で接続します。<br>トークンは、この端末のブラウザにだけ保存されます。</div></details>
+<h2>通知</h2>
+<div class="bar" style="margin-top:0"><button id="nb">通知 OFF</button><input type="time" id="nt" value="23:30"><button id="ntst">テスト</button></div>
+<div class="sub" id="ns" style="margin-top:8px"></div>
+<div class="sub" style="margin-top:4px">アプリを開いている間に通知します。設定した時刻を過ぎてからアプリを開いたときも、3種目未満ならお知らせします。</div>
+<div class="nbn" id="nbn" hidden role="alert"><div id="nbt"></div><button id="nbc">閉じる</button></div>
 </main>
 <div class="md" id="md" hidden><div class="box"><div id="mt"></div><div class="sub">削除すると元に戻せません。</div>
 <div class="bar"><button id="mc">キャンセル</button><button class="x sure" id="mo">削除する</button></div></div></div>
@@ -95,10 +149,12 @@ function parse(s){var p=s.split('-');return new Date(+p[0],+p[1]-1,+p[2])}
 var S;
 try{S=JSON.parse(localStorage.getItem(KEY)||'null')}catch(e){S=null}
 if(!S||!Array.isArray(S.ex)){S={ex:DEF.map(function(n,i){return{id:'e'+i,name:n,dates:[]}})}}
+if(!Array.isArray(S.stores))S.stores=[{id:'s0',name:'稲沢公園前店',c:0},{id:'s1',name:'一宮妙興寺店',c:1},{id:'s2',name:'一宮尾西店',c:2}];
+if(!S.visits||typeof S.visits!=='object')S.visits={};
 S.ex.forEach(function(e){
   if(M.indexOf(e.part)<0){var g=guess(e.name);e.part=g||OLD[e.part]||''}
 });
-function save(){try{localStorage.setItem(KEY,JSON.stringify(S))}catch(e){}}
+function save(){S.rev=Date.now();try{localStorage.setItem(KEY,JSON.stringify(S))}catch(e){}if(typeof cloudMark==='function')cloudMark()}
 var dt=document.getElementById('dt');dt.value=ymd(new Date());
 function esc(s){return s.replace(/[&<>"]/g,function(c){return{'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]})}
 var PD={
@@ -201,6 +257,9 @@ function row(ex){
   (edit?'<button class="x" data-x="'+ex.id+'">✕</button>':'')+'</div></div></div>';
 }
 function render(){
+  renderHead();renderCal();renderStores();
+  var dd=dt.value;
+  document.getElementById('cnt').textContent=S.ex.filter(function(e){return e.dates.indexOf(dd)>=0}).length+'/3';
   var sorted=sortList(),shown=edit?sorted:sorted.filter(function(e){return !e.hid});
   document.getElementById('all').innerHTML=shown.length?shown.map(row).join(''):'<div class="sub">'+(S.ex.length?'表示する種目がありません。「編集」で表示に戻せます。':'種目を追加してください')+'</div>';
   document.getElementById('ed').textContent=edit?'編集を終了':'編集';
@@ -229,12 +288,17 @@ document.getElementById('ed').onclick=function(){edit=!edit;pend=null;render()};
 dt.onchange=function(){if(!dt.value)dt.value=ymd(new Date());render()};
 var smT=null;
 function setMsg(t){var el=document.getElementById('sm');el.textContent=t;clearTimeout(smT);smT=setTimeout(function(){el.textContent=''},5000)}
-function pack(){return JSON.stringify({app:'workout',v:1,exportedAt:new Date().toISOString(),ex:S.ex})}
-function importText(txt){
+function pack(){
+  var nm={},vis={};
+  S.stores.forEach(function(st){nm[st.id]=st.name});
+  Object.keys(S.visits).forEach(function(k){var a=S.visits[k].map(function(id){return nm[id]}).filter(Boolean);if(a.length)vis[k]=a});
+  return JSON.stringify({app:'workout',v:2,exportedAt:new Date().toISOString(),ex:S.ex,stores:S.stores.map(function(st){return{name:st.name,c:st.c}}),visits:vis});
+}
+function importText(txt,quiet){
   try{
     var j=JSON.parse(txt);
     if(!j||j.app!=='workout'||!Array.isArray(j.ex))throw 0;
-    var ae=0,ad=0,ag=0,pg=[],map={};
+    var ae=0,ad=0,ag=0,av=0,pg=[],map={};
     j.ex.forEach(function(x){
       if(!x||typeof x.name!=='string')return;
       var nm=x.name.trim().slice(0,30);if(!nm)return;
@@ -248,10 +312,27 @@ function importText(txt){
     });
     pg.forEach(function(q){if(q.g&&q.t.grp&&!map[q.g])map[q.g]=q.t.grp});
     pg.forEach(function(q){if(q.g&&!q.t.grp){if(!map[q.g])map[q.g]=newGid();q.t.grp=map[q.g];ag++}});
+    function ensureStore(n){
+      n=String(n).trim().slice(0,20);if(!n)return null;
+      var st=S.stores.find(function(q){return q.name===n});
+      if(!st){var used=S.stores.map(function(q){return q.c}),c=0;while(used.indexOf(c)>=0)c++;
+        st={id:'s'+Date.now()+Math.floor(Math.random()*1e6),name:n,c:c};S.stores.push(st)}
+      return st;
+    }
+    (Array.isArray(j.stores)?j.stores:[]).forEach(function(x){if(x&&typeof x.name==='string')ensureStore(x.name)});
+    if(j.visits&&typeof j.visits==='object')Object.keys(j.visits).forEach(function(d){
+      if(!/^\d{4}-\d{2}-\d{2}$/.test(d)||!Array.isArray(j.visits[d]))return;
+      j.visits[d].forEach(function(n){
+        if(typeof n!=='string')return;
+        var st=ensureStore(n);if(!st)return;
+        var a=S.visits[d]||(S.visits[d]=[]);
+        if(a.indexOf(st.id)<0){a.push(st.id);av++}
+      });
+    });
     save();render();
-    setMsg('取り込みました（種目 '+ae+' 件、記録 '+ad+' 件を追加'+(ag?'、同じ扱い '+ag+' 件':'')+'）');
+    if(!quiet)setMsg('取り込みました（種目 '+ae+' 件、記録 '+ad+' 件を追加'+(ag?'、同じ扱い '+ag+' 件':'')+(av?'、店舗の記録 '+av+' 件':'')+'）');
     return true;
-  }catch(e){setMsg('読み込めませんでした。Outで保存したファイルを選んでください。');return false}
+  }catch(e){if(!quiet)setMsg('読み込めませんでした。Outで保存したファイルを選んでください。');return false}
 }
 document.getElementById('exp').onclick=async function(){
   var data=pack(),name='workout-'+ymd(new Date())+'.json',dl=null;
@@ -274,11 +355,248 @@ document.getElementById('imp').onchange=function(){
   r.onload=function(){importText(r.result);inp.value=''};
   r.readAsText(f);
 };
-function closeMd(){pend=null;document.getElementById('md').hidden=true}
+var calOpen=false,cy=0,cm=0,WD=['日','月','火','水','木','金','土'];
+function setDate(v){dt.value=v;render()}
+function shiftDay(n){var d=parse(dt.value);d.setDate(d.getDate()+n);setDate(ymd(d))}
+function renderHead(){
+  var d=parse(dt.value),td=ymd(new Date());
+  document.getElementById('dl').innerHTML=(d.getMonth()+1)+'月'+d.getDate()+'日('+WD[d.getDay()]+')'+(dt.value===td?'<small>今日</small>':'');
+  document.getElementById('tb').hidden=dt.value===td;
+  var cb=document.getElementById('cb');cb.classList.toggle('on',calOpen);cb.setAttribute('aria-expanded',calOpen?'true':'false');
+}
+function renderCal(){
+  document.getElementById('cal').classList.toggle('open',calOpen);
+  if(!calOpen)return;
+  var sel=dt.value,td=ymd(new Date()),cnt={};
+  S.ex.forEach(function(e){e.dates.forEach(function(x){cnt[x]=(cnt[x]||0)+1})});
+  function dots(k){var h2=(S.visits[k]||[]).map(function(id){var st=S.stores.find(function(x){return x.id===id});return st?'<i style="background:'+scol(st)+'"></i>':''}).join('');return h2?'<span class="dots">'+h2+'</span>':''}
+  var start=new Date(cy,cm,1-new Date(cy,cm,1).getDay());
+  var h='<div class="cbox"><div class="chd"><button data-cm="-1">‹</button><b>'+cy+'年'+(cm+1)+'月</b><button data-cm="1">›</button></div><div class="cg">';
+  WD.forEach(function(w,i){h+='<div class="cw'+(i===0?' su':i===6?' sa':'')+'">'+w+'</div>'});
+  for(var i=0;i<42;i++){
+    var d=new Date(start.getFullYear(),start.getMonth(),start.getDate()+i);
+    if(i===35&&d.getMonth()!==cm)break;
+    var k=ymd(d),wd=d.getDay();
+    h+='<button class="cd'+(wd===0?' su':wd===6?' sa':'')+(d.getMonth()!==cm?' out':'')+(k===td?' td':'')+(k===sel?' sel':'')+'" data-cd="'+k+'"><span class="n">'+d.getDate()+'</span>'+(cnt[k]?'<span class="p">'+cnt[k]+'</span>':'')+dots(k)+'</button>';
+  }
+  document.getElementById('calin').innerHTML=h+'</div></div>';
+}
+document.getElementById('cb').onclick=function(){
+  calOpen=!calOpen;
+  if(calOpen){var d=parse(dt.value);cy=d.getFullYear();cm=d.getMonth()}
+  renderHead();renderCal();
+};
+document.getElementById('dp').onclick=function(){shiftDay(-1)};
+document.getElementById('dn').onclick=function(){shiftDay(1)};
+document.getElementById('tb').onclick=function(){setDate(ymd(new Date()))};
+document.getElementById('cal').addEventListener('click',function(e){
+  var m=e.target.closest('[data-cm]');
+  if(m){cm+=+m.getAttribute('data-cm');if(cm<0){cm=11;cy--}if(cm>11){cm=0;cy++}renderCal();return}
+  var c=e.target.closest('[data-cd]');
+  if(c){calOpen=false;setDate(c.getAttribute('data-cd'))}
+});
+var pendS=null,SC=['#2563eb','#db2777','#d97706','#059669','#7c3aed','#0891b2','#dc2626','#4d7c0f'];
+function scol(st){return SC[(st.c||0)%SC.length]}
+function renderStores(){
+  var vs=S.visits[dt.value]||[];
+  document.getElementById('stc').innerHTML=S.stores.length?S.stores.map(function(st){
+    return '<button class="sc'+(vs.indexOf(st.id)>=0?' on':'')+'" style="--col:'+scol(st)+'" data-sc="'+st.id+'"><i></i>'+esc(st.name)+'</button>';
+  }).join(''):'<span class="sub">店舗がありません。「編集」で追加できます。</span>';
+  var ed=document.getElementById('ste'),k=document.getElementById('sn');k=k?k.value:'';
+  if(!edit){ed.innerHTML='';return}
+  ed.innerHTML='<div class="cbox" style="margin-top:10px">'+S.stores.map(function(st){
+    return '<div class="ser"><i class="sd" style="background:'+scol(st)+'"></i><input type="text" maxlength="20" data-sn="'+st.id+'" value="'+esc(st.name)+'"><button class="x" data-sx="'+st.id+'">✕</button></div>';
+  }).join('')+'<div class="bar" style="margin-top:8px"><input type="text" id="sn" maxlength="20" placeholder="新しい店舗名" value="'+esc(k)+'"><button class="p" id="sa">追加</button></div></div>';
+}
+function addStore(){
+  var i=document.getElementById('sn'),v=i.value.trim().slice(0,20);
+  if(!v||S.stores.some(function(q){return q.name===v}))return;
+  var used=S.stores.map(function(q){return q.c}),c=0;while(used.indexOf(c)>=0)c++;
+  S.stores.push({id:'s'+Date.now()+Math.floor(Math.random()*1e6),name:v,c:c});i.value='';save();render();
+}
+function delStore(id){
+  S.stores=S.stores.filter(function(q){return q.id!==id});
+  Object.keys(S.visits).forEach(function(k){S.visits[k]=S.visits[k].filter(function(x){return x!==id});if(!S.visits[k].length)delete S.visits[k]});
+  save();
+}
+document.body.addEventListener('click',function(e){
+  var c=e.target.closest('[data-sc]');
+  if(c){var k=dt.value,id=c.getAttribute('data-sc'),a=S.visits[k]||[],i=a.indexOf(id);if(i>=0)a.splice(i,1);else a.push(id);if(a.length)S.visits[k]=a;else delete S.visits[k];save();render();return}
+  var x=e.target.closest('[data-sx]');
+  if(x){var st=S.stores.find(function(q){return q.id===x.getAttribute('data-sx')});if(st){pendS=st.id;document.getElementById('mt').textContent='「'+st.name+'」を削除しますか？（この店舗の記録も消えます）';document.getElementById('md').hidden=false}return}
+  if(e.target.closest('#sa'))addStore();
+});
+document.body.addEventListener('change',function(e){
+  var n=e.target.closest&&e.target.closest('[data-sn]');
+  if(n){var st=S.stores.find(function(q){return q.id===n.getAttribute('data-sn')}),v=n.value.trim().slice(0,20);
+    if(st&&v&&!S.stores.some(function(q){return q!==st&&q.name===v}))st.name=v;
+    save();render()}
+});
+document.body.addEventListener('keydown',function(e){if(e.key==='Enter'&&e.target.id==='sn')addStore()});
+var NK='workout-notify',NS={on:false,time:'23:30',last:''};
+try{var nv=JSON.parse(localStorage.getItem(NK)||'null');if(nv&&typeof nv==='object'){NS.on=!!nv.on;if(/^\d{2}:\d{2}$/.test(nv.time))NS.time=nv.time;NS.last=typeof nv.last==='string'?nv.last:''}}catch(e){}
+function nsave(){try{localStorage.setItem(NK,JSON.stringify(NS))}catch(e){}}
+function nmin(t){var p=t.split(':');return +p[0]*60+ +p[1]}
+function doneOn(now){var t=ymd(now);return S.ex.filter(function(e){return e.dates.indexOf(t)>=0}).length}
+function permText(){
+  if(typeof Notification==='undefined')return 'システム通知は使えない環境です（アプリ内のお知らせのみ）';
+  var p=Notification.permission;
+  return p==='granted'?'システム通知：許可済み':p==='denied'?'システム通知：ブロック中（アプリ内のお知らせのみ）':'システム通知：未許可';
+}
+function renderNotify(){
+  var b=document.getElementById('nb');b.textContent=NS.on?'通知 ON':'通知 OFF';b.classList.toggle('p',NS.on);
+  document.getElementById('nt').value=NS.time;
+  document.getElementById('ns').textContent=(NS.on?NS.time+'に判定します。':'OFFです。')+' '+permText();
+}
+function fireNotify(msg){
+  document.getElementById('nbt').textContent=msg;document.getElementById('nbn').hidden=false;
+  try{
+    if(typeof Notification!=='undefined'&&Notification.permission==='granted'&&navigator.serviceWorker&&navigator.serviceWorker.getRegistration){
+      navigator.serviceWorker.getRegistration().then(function(reg){
+        if(reg&&reg.showNotification)reg.showNotification('今日の筋トレ種目',{body:msg,tag:'workout-daily',icon:'icon-192.png'});
+      }).catch(function(){});
+    }
+  }catch(e){}
+  try{if(navigator.vibrate)navigator.vibrate(200)}catch(e){}
+}
+function checkNotify(now){
+  now=now||new Date();
+  if(!NS.on)return false;
+  var today=ymd(now);
+  if(NS.last===today)return false;
+  if(now.getHours()*60+now.getMinutes()<nmin(NS.time))return false;
+  var n=doneOn(now);
+  NS.last=today;nsave();
+  if(n>=3)return false;
+  fireNotify('今日の筋トレは '+n+'/3 です。あと '+(3-n)+' 種目！');
+  return true;
+}
+document.getElementById('nb').onclick=function(){
+  NS.on=!NS.on;
+  if(NS.on){
+    var now=new Date();NS.last=(now.getHours()*60+now.getMinutes()>=nmin(NS.time))?ymd(now):'';
+    try{
+      if(typeof Notification!=='undefined'&&Notification.permission==='default'){
+        var r=Notification.requestPermission(function(){renderNotify()});
+        if(r&&r.then)r.then(renderNotify,renderNotify);
+      }
+    }catch(e){}
+  }
+  nsave();renderNotify();
+};
+document.getElementById('nt').onchange=function(){
+  var v=this.value;
+  if(/^\d{2}:\d{2}$/.test(v)){var now=new Date();NS.time=v;NS.last=(now.getHours()*60+now.getMinutes()>=nmin(v))?ymd(now):'';nsave()}
+  renderNotify();
+};
+document.getElementById('ntst').onclick=function(){fireNotify('テスト通知です。今日は '+doneOn(new Date())+'/3 です。')};
+document.getElementById('nbc').onclick=function(){document.getElementById('nbn').hidden=true};
+document.addEventListener('visibilitychange',function(){if(!document.hidden)checkNotify()});
+setInterval(function(){checkNotify()},20000);
+renderNotify();checkNotify();
+var CK='workout-cloud',CS={repo:'',token:'',baseRev:0,dirty:false,sha:'',last:''},cbusy=false,cagain=false,cT=null,cdelay=3000;
+try{var cv=JSON.parse(localStorage.getItem(CK)||'null');if(cv&&typeof cv==='object'){CS.repo=String(cv.repo||'');CS.token=String(cv.token||'');CS.baseRev=+cv.baseRev||0;CS.dirty=!!cv.dirty;CS.sha=String(cv.sha||'');CS.last=String(cv.last||'')}}catch(e){}
+function csave(){try{localStorage.setItem(CK,JSON.stringify(CS))}catch(e){}}
+function b64e(str){var b=new TextEncoder().encode(str),t='';for(var i=0;i<b.length;i+=8192)t+=String.fromCharCode.apply(null,b.subarray(i,i+8192));return btoa(t)}
+function b64d(t){var x=atob(String(t).replace(/\s/g,'')),b=new Uint8Array(x.length);for(var i=0;i<x.length;i++)b[i]=x.charCodeAt(i);return new TextDecoder().decode(b)}
+function ghUrl(){return 'https://api.github.com/repos/'+CS.repo+'/contents/workout-data.json'}
+function ghHead(){return {'Authorization':'Bearer '+CS.token,'Accept':'application/vnd.github+json','X-GitHub-Api-Version':'2022-11-28'}}
+function snapshot(){return JSON.stringify({app:'workout',v:3,rev:S.rev||0,ex:S.ex,stores:S.stores,visits:S.visits})}
+function setCloud(t){var el=document.getElementById('cs');if(el)el.textContent=t}
+function nowHM(){var d=new Date();return ('0'+d.getHours()).slice(-2)+':'+('0'+d.getMinutes()).slice(-2)}
+function localEmpty(){return S.ex.every(function(e){return !e.dates.length})&&!Object.keys(S.visits).length}
+function toPack(d){
+  var nm={},vis={};
+  (d.stores||[]).forEach(function(x){nm[x.id]=x.name});
+  Object.keys(d.visits||{}).forEach(function(k){var a=(d.visits[k]||[]).map(function(id){return nm[id]}).filter(Boolean);if(a.length)vis[k]=a});
+  return {app:'workout',v:2,ex:d.ex||[],stores:(d.stores||[]).map(function(x){return{name:x.name,c:x.c}}),visits:vis};
+}
+function adopt(d){
+  S.ex=(Array.isArray(d.ex)?d.ex:[]).filter(function(e){return e&&typeof e.name==='string'&&e.id});
+  S.stores=Array.isArray(d.stores)?d.stores.filter(function(x){return x&&typeof x.name==='string'&&x.id}):[];
+  S.visits=(d.visits&&typeof d.visits==='object')?d.visits:{};
+  S.rev=+d.rev||0;
+  S.ex.forEach(function(e){if(!Array.isArray(e.dates))e.dates=[];if(M.indexOf(e.part)<0)e.part=guess(e.name)||''});
+  try{localStorage.setItem(KEY,JSON.stringify(S))}catch(e){}
+  render();
+}
+function cloudMark(){if(!CS||!CS.repo||!CS.token)return;CS.dirty=true;csave();clearTimeout(cT);cT=setTimeout(cloudSync,cdelay)}
+function cloudErr(c){
+  setCloud(c===401?'同期できません：トークンが無効です。':c===403?'同期できません：権限がありません（トークンの権限を確認してください）。':c===404?'同期できません：リポジトリが見つかりません（名前とトークンの対象を確認してください）。':'同期できません（エラー '+c+'）。');
+}
+async function cloudPush(){
+  var rev0=S.rev||0,body={message:'sync '+new Date().toISOString(),content:b64e(snapshot())};
+  if(CS.sha)body.sha=CS.sha;
+  var r=await fetch(ghUrl(),{method:'PUT',headers:Object.assign({'Content-Type':'application/json'},ghHead()),body:JSON.stringify(body)});
+  if(r.status===200||r.status===201){
+    var j=await r.json();CS.sha=(j.content&&j.content.sha)||'';CS.baseRev=rev0;
+    if((S.rev||0)===rev0)CS.dirty=false;else cagain=true;
+    CS.last=nowHM();csave();return 'ok';
+  }
+  if(r.status===409||r.status===422)return 'conflict';
+  return r.status;
+}
+async function cloudSync(){
+  if(!CS.repo||!CS.token)return;
+  if(cbusy){cagain=true;return}
+  cbusy=true;setCloud('同期中…');
+  var failed=false;
+  try{
+    var again=true,guard=0;
+    while(again&&guard++<4){
+      again=false;cagain=false;
+      var r=await fetch(ghUrl(),{headers:ghHead(),cache:'no-store'});
+      if(r.status===404){
+        CS.sha='';var p=await cloudPush();
+        if(p==='conflict'){again=true;continue}
+        if(p!=='ok'){cloudErr(p);failed=true;break}
+      }else if(r.status===200){
+        var j=await r.json(),remote=JSON.parse(b64d(j.content));
+        if(remote.app!=='workout'||!Array.isArray(remote.ex))throw new Error('format');
+        CS.sha=j.sha;var rrev=+remote.rev||0;
+        if(CS.baseRev===0&&localEmpty()){adopt(remote);CS.baseRev=S.rev;CS.dirty=false;CS.last=nowHM();csave()}
+        else if(CS.dirty){
+          if(rrev>CS.baseRev)importText(JSON.stringify(toPack(remote)),true);
+          var p2=await cloudPush();
+          if(p2==='conflict'){again=true;continue}
+          if(p2!=='ok'){cloudErr(p2);failed=true;break}
+        }else if(rrev>S.rev){adopt(remote);CS.baseRev=S.rev;CS.last=nowHM();csave()}
+        else{CS.last=nowHM();csave()}
+      }else{cloudErr(r.status);failed=true;break}
+      if(cagain)again=true;
+    }
+  }catch(e){setCloud('通信できません（オフライン、または、この環境では使えません）。');failed=true}
+  cbusy=false;
+  if(!failed)setCloud('接続中：'+CS.repo+(CS.last?'　最終同期 '+CS.last:''));
+  renderCloud();
+}
+function renderCloud(){
+  var on=!!(CS.repo&&CS.token);
+  ['cr','ct','cc'].forEach(function(id){document.getElementById(id).hidden=on});
+  ['cn','cx'].forEach(function(id){document.getElementById(id).hidden=!on});
+  if(!on)setCloud('未接続（記録は、この端末の中だけに保存されています）');
+}
+document.getElementById('cc').onclick=function(){
+  var r=document.getElementById('cr').value.trim(),t=document.getElementById('ct').value.trim();
+  if(!/^[\w.-]+\/[\w.-]+$/.test(r)){setCloud('「ユーザー名/リポジトリ名」の形で入力してください。');return}
+  if(!t){setCloud('トークンを入力してください。');return}
+  CS.repo=r;CS.token=t;CS.baseRev=0;CS.dirty=true;CS.sha='';CS.last='';csave();
+  document.getElementById('ct').value='';renderCloud();cloudSync();
+};
+document.getElementById('cn').onclick=function(){cloudSync()};
+document.getElementById('cx').onclick=function(){
+  CS.repo='';CS.token='';CS.baseRev=0;CS.dirty=false;CS.sha='';CS.last='';csave();renderCloud();
+};
+document.addEventListener('visibilitychange',function(){if(!document.hidden)cloudSync()});
+window.addEventListener('online',function(){cloudSync()});
+renderCloud();
+if(CS.repo&&CS.token){setCloud('接続中：'+CS.repo+(CS.last?'　最終同期 '+CS.last:''));cloudSync()}
+function closeMd(){pend=null;pendS=null;document.getElementById('md').hidden=true}
 document.getElementById('mc').onclick=closeMd;
 document.getElementById('md').addEventListener('click',function(e){if(e.target===this)closeMd()});
 document.getElementById('mo').onclick=function(){
-  if(pend){S.ex=S.ex.filter(function(q){return q.id!==pend});save()}
+  if(pendS){delStore(pendS)}
+  else if(pend){S.ex=S.ex.filter(function(q){return q.id!==pend});save()}
   closeMd();render();
 };
 render();
