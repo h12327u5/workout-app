@@ -2,9 +2,39 @@
 <html lang="ja"><head><meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>今日の筋トレ種目</title>
-<link rel="manifest" href="manifest.webmanifest">
 <meta name="theme-color" content="#4d7c0f">
-<link rel="apple-touch-icon" href="icon-192.png">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="筋トレ">
+<script>
+/* PWA: アイコンとマニフェストを実行時に生成（外部ファイル不要） */
+(function(){
+  try{
+    function icon(n){
+      var c=document.createElement('canvas');c.width=c.height=n;var x=c.getContext('2d');
+      x.fillStyle='#4d7c0f';x.fillRect(0,0,n,n);
+      x.fillStyle='#fff';
+      var u=n/16;
+      x.fillRect(5.2*u,7*u,5.6*u,2*u);
+      x.fillRect(3.6*u,5.2*u,1.6*u,5.6*u);
+      x.fillRect(10.8*u,5.2*u,1.6*u,5.6*u);
+      x.fillRect(2*u,6.4*u,1.6*u,3.2*u);
+      x.fillRect(12.4*u,6.4*u,1.6*u,3.2*u);
+      return c.toDataURL('image/png');
+    }
+    var base=location.href.split('#')[0].split('?')[0].replace(/[^\/]*$/,'');
+    var m={name:'今日の筋トレ種目',short_name:'筋トレ',lang:'ja',start_url:base,scope:base,display:'standalone',
+      background_color:'#ffffff',theme_color:'#4d7c0f',
+      icons:[{src:icon(192),sizes:'192x192',type:'image/png',purpose:'any maskable'},
+             {src:icon(512),sizes:'512x512',type:'image/png',purpose:'any maskable'}]};
+    var l=document.createElement('link');l.rel='manifest';
+    l.href=URL.createObjectURL(new Blob([JSON.stringify(m)],{type:'application/manifest+json'}));
+    document.head.appendChild(l);
+    var a=document.createElement('link');a.rel='apple-touch-icon';a.href=icon(180);document.head.appendChild(a);
+  }catch(e){}
+})();
+</script>
+
 <style>
 :root{--bg:#fff;--card:#fff;--tx:#1b1f24;--sub:#6b7280;--ac:#4d7c0f;--acbg:#f1f7e8;--bd:#d9dde3;--tile:#f3f4f6;color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
 html{scroll-padding-top:env(safe-area-inset-top,0px);background:var(--bg)}
@@ -37,11 +67,8 @@ input[type=password]{font:inherit;color:var(--tx);background:#fff;border:1px sol
 #cr{flex:1 1 100%}
 details{margin-top:8px;font-size:13px;color:var(--sub)}
 details summary{cursor:pointer;font-weight:600}
-input[type=time]{font:inherit;color:var(--tx);background:#fff;border:1px solid var(--bd);border-radius:10px;padding:8px 10px}
-.nbn{position:fixed;left:12px;right:12px;top:calc(env(safe-area-inset-top,0px) + 12px);z-index:20;background:var(--ac);color:#fff;border-radius:14px;padding:14px 16px;display:flex;align-items:center;gap:12px;box-shadow:0 8px 24px rgba(0,0,0,.25);font-weight:600}
-.nbn[hidden]{display:none}
-.nbn button{margin-left:auto;background:#fff;color:var(--ac);border-color:#fff;flex:none}
-#nbt{flex:1}
+.ynote{background:#fff7e6;border:1px solid #f5c26b;color:#7a4b00;border-radius:12px;padding:10px 14px;font-weight:600;margin-bottom:10px}
+.ynote[hidden]{display:none}
 .stc{display:flex;flex-wrap:wrap;gap:8px;margin-top:6px}
 .sc{display:inline-flex;align-items:center;gap:6px;padding:8px 14px;border-radius:999px;font-size:15px}
 .sc i{width:10px;height:10px;border-radius:50%;background:var(--col)}
@@ -88,6 +115,7 @@ input[type=text]{flex:1}
 .cnt{font-weight:700;font-size:20px;color:var(--ac)}
 </style></head>
 <body><main>
+<div class="ynote" id="yn" hidden></div>
 <div class="bar" style="margin-top:0"><span class="dl" id="dl"></span><span class="cnt" id="cnt" style="margin-left:auto"></span></div>
 <div class="bar"><button id="cb" aria-expanded="false">Calendar</button><button id="dp" aria-label="前の日">‹</button><button id="dn" aria-label="次の日">›</button><button id="tb" hidden>今日</button><input type="date" id="dt" hidden></div>
 <div class="cal" id="cal"><div id="calin"></div></div>
@@ -112,11 +140,6 @@ input[type=text]{flex:1}
 <div class="bar"><button class="p" id="cc">接続</button><button id="cn" hidden>今すぐ同期</button><button id="cx" hidden>切断</button></div>
 <details><summary>設定のしかた</summary>
 <div style="margin-top:6px;line-height:1.7">1. GitHubで、記録専用の「プライベート」リポジトリを新しく作ります（例：workout-data）。公開（Public）にはしないでください。<br>2. GitHubの Settings → Developer settings → Personal access tokens → Fine-grained tokens で、新しいトークンを作ります。対象はそのリポジトリだけ、権限は Contents: Read and write だけにします。<br>3. 上の欄に「ユーザー名/リポジトリ名」とトークンを入れて「接続」を押します。2台目以降の端末も、同じ手順で接続します。<br>トークンは、この端末のブラウザにだけ保存されます。</div></details>
-<h2>通知</h2>
-<div class="bar" style="margin-top:0"><button id="nb">通知 OFF</button><input type="time" id="nt" value="23:30"><button id="ntst">テスト</button></div>
-<div class="sub" id="ns" style="margin-top:8px"></div>
-<div class="sub" style="margin-top:4px">アプリを開いている間に通知します。設定した時刻を過ぎてからアプリを開いたときも、3種目未満ならお知らせします。</div>
-<div class="nbn" id="nbn" hidden role="alert"><div id="nbt"></div><button id="nbc">閉じる</button></div>
 </main>
 <div class="md" id="md" hidden><div class="box"><div id="mt"></div><div class="sub">削除すると元に戻せません。</div>
 <div class="bar"><button id="mc">キャンセル</button><button class="x sure" id="mo">削除する</button></div></div></div>
@@ -257,7 +280,7 @@ function row(ex){
   (edit?'<button class="x" data-x="'+ex.id+'">✕</button>':'')+'</div></div></div>';
 }
 function render(){
-  renderHead();renderCal();renderStores();
+  renderHead();renderCal();renderStores();renderYesterday();
   var dd=dt.value;
   document.getElementById('cnt').textContent=S.ex.filter(function(e){return e.dates.indexOf(dd)>=0}).length+'/3';
   var sorted=sortList(),shown=edit?sorted:sorted.filter(function(e){return !e.hid});
@@ -433,67 +456,15 @@ document.body.addEventListener('change',function(e){
     save();render()}
 });
 document.body.addEventListener('keydown',function(e){if(e.key==='Enter'&&e.target.id==='sn')addStore()});
-var NK='workout-notify',NS={on:false,time:'23:30',last:''};
-try{var nv=JSON.parse(localStorage.getItem(NK)||'null');if(nv&&typeof nv==='object'){NS.on=!!nv.on;if(/^\d{2}:\d{2}$/.test(nv.time))NS.time=nv.time;NS.last=typeof nv.last==='string'?nv.last:''}}catch(e){}
-function nsave(){try{localStorage.setItem(NK,JSON.stringify(NS))}catch(e){}}
-function nmin(t){var p=t.split(':');return +p[0]*60+ +p[1]}
-function doneOn(now){var t=ymd(now);return S.ex.filter(function(e){return e.dates.indexOf(t)>=0}).length}
-function permText(){
-  if(typeof Notification==='undefined')return 'システム通知は使えない環境です（アプリ内のお知らせのみ）';
-  var p=Notification.permission;
-  return p==='granted'?'システム通知：許可済み':p==='denied'?'システム通知：ブロック中（アプリ内のお知らせのみ）':'システム通知：未許可';
+try{localStorage.removeItem('workout-notify')}catch(e){}
+function renderYesterday(){
+  var el=document.getElementById('yn');if(!el)return;
+  var y=new Date();y.setDate(y.getDate()-1);var k=ymd(y);
+  var any=S.ex.some(function(e){return e.dates.length>0});
+  var n=S.ex.filter(function(e){return e.dates.indexOf(k)>=0}).length;
+  if(!any||n>=3){el.hidden=true;return}
+  el.hidden=false;el.textContent='昨日の筋トレは '+n+'/3 でした。';
 }
-function renderNotify(){
-  var b=document.getElementById('nb');b.textContent=NS.on?'通知 ON':'通知 OFF';b.classList.toggle('p',NS.on);
-  document.getElementById('nt').value=NS.time;
-  document.getElementById('ns').textContent=(NS.on?NS.time+'に判定します。':'OFFです。')+' '+permText();
-}
-function fireNotify(msg){
-  document.getElementById('nbt').textContent=msg;document.getElementById('nbn').hidden=false;
-  try{
-    if(typeof Notification!=='undefined'&&Notification.permission==='granted'&&navigator.serviceWorker&&navigator.serviceWorker.getRegistration){
-      navigator.serviceWorker.getRegistration().then(function(reg){
-        if(reg&&reg.showNotification)reg.showNotification('今日の筋トレ種目',{body:msg,tag:'workout-daily',icon:'icon-192.png'});
-      }).catch(function(){});
-    }
-  }catch(e){}
-  try{if(navigator.vibrate)navigator.vibrate(200)}catch(e){}
-}
-function checkNotify(now){
-  now=now||new Date();
-  if(!NS.on)return false;
-  var today=ymd(now);
-  if(NS.last===today)return false;
-  if(now.getHours()*60+now.getMinutes()<nmin(NS.time))return false;
-  var n=doneOn(now);
-  NS.last=today;nsave();
-  if(n>=3)return false;
-  fireNotify('今日の筋トレは '+n+'/3 です。あと '+(3-n)+' 種目！');
-  return true;
-}
-document.getElementById('nb').onclick=function(){
-  NS.on=!NS.on;
-  if(NS.on){
-    var now=new Date();NS.last=(now.getHours()*60+now.getMinutes()>=nmin(NS.time))?ymd(now):'';
-    try{
-      if(typeof Notification!=='undefined'&&Notification.permission==='default'){
-        var r=Notification.requestPermission(function(){renderNotify()});
-        if(r&&r.then)r.then(renderNotify,renderNotify);
-      }
-    }catch(e){}
-  }
-  nsave();renderNotify();
-};
-document.getElementById('nt').onchange=function(){
-  var v=this.value;
-  if(/^\d{2}:\d{2}$/.test(v)){var now=new Date();NS.time=v;NS.last=(now.getHours()*60+now.getMinutes()>=nmin(v))?ymd(now):'';nsave()}
-  renderNotify();
-};
-document.getElementById('ntst').onclick=function(){fireNotify('テスト通知です。今日は '+doneOn(new Date())+'/3 です。')};
-document.getElementById('nbc').onclick=function(){document.getElementById('nbn').hidden=true};
-document.addEventListener('visibilitychange',function(){if(!document.hidden)checkNotify()});
-setInterval(function(){checkNotify()},20000);
-renderNotify();checkNotify();
 var CK='workout-cloud',CS={repo:'',token:'',baseRev:0,dirty:false,sha:'',last:''},cbusy=false,cagain=false,cT=null,cdelay=3000;
 try{var cv=JSON.parse(localStorage.getItem(CK)||'null');if(cv&&typeof cv==='object'){CS.repo=String(cv.repo||'');CS.token=String(cv.token||'');CS.baseRev=+cv.baseRev||0;CS.dirty=!!cv.dirty;CS.sha=String(cv.sha||'');CS.last=String(cv.last||'')}}catch(e){}
 function csave(){try{localStorage.setItem(CK,JSON.stringify(CS))}catch(e){}}
@@ -600,6 +571,11 @@ document.getElementById('mo').onclick=function(){
   closeMd();render();
 };
 render();
+</script><script>
+if('serviceWorker' in navigator){
+  window.addEventListener('load',function(){
+    navigator.serviceWorker.register('./sw.js').catch(function(){});
+  });
+}
 </script>
-<script>if('serviceWorker' in navigator&&location.protocol!=='file:'){window.addEventListener('load',function(){try{navigator.serviceWorker.register('sw.js').catch(function(){})}catch(e){}})}</script>
 </body></html>

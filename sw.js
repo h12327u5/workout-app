@@ -1,27 +1,38 @@
-var CACHE='workout-v5';
-var FILES=['./','index.html','manifest.webmanifest','icon-192.png','icon-512.png'];
-self.addEventListener('install',function(e){
-  e.waitUntil(caches.open(CACHE).then(function(c){return c.addAll(FILES)}).then(function(){return self.skipWaiting()}));
+/* 今日の筋トレ種目 - Service Worker */
+const CACHE = 'workout-app-v1';
+const ASSETS = ['./', './index.html'];
+
+self.addEventListener('install', (e) => {
+  e.waitUntil(caches.open(CACHE).then((c) => c.addAll(ASSETS)).then(() => self.skipWaiting()));
 });
-self.addEventListener('activate',function(e){
-  e.waitUntil(caches.keys().then(function(ks){
-    return Promise.all(ks.filter(function(k){return k!==CACHE}).map(function(k){return caches.delete(k)}));
-  }).then(function(){return self.clients.claim()}));
+
+self.addEventListener('activate', (e) => {
+  e.waitUntil(
+    caches.keys()
+      .then((keys) => Promise.all(keys.filter((k) => k !== CACHE).map((k) => caches.delete(k))))
+      .then(() => self.clients.claim())
+  );
 });
-self.addEventListener('fetch',function(e){
-  if(e.request.method!=='GET')return;
-  e.respondWith(caches.match(e.request).then(function(hit){
-    var net=fetch(e.request).then(function(res){
-      if(res&&res.ok){var cp=res.clone();caches.open(CACHE).then(function(c){c.put(e.request,cp)})}
-      return res;
-    }).catch(function(){return hit});
-    return hit||net;
-  }));
-});
-self.addEventListener('notificationclick',function(e){
-  e.notification.close();
-  e.waitUntil(self.clients.matchAll({type:'window',includeUncontrolled:true}).then(function(cs){
-    for(var i=0;i<cs.length;i++){if('focus' in cs[i])return cs[i].focus()}
-    return self.clients.openWindow('./');
-  }));
+
+self.addEventListener('fetch', (e) => {
+  const req = e.request;
+  if (req.method !== 'GET') return;
+  const url = new URL(req.url);
+  // GitHub API（クラウド同期）などの外部通信はキャッシュしない
+  if (url.origin !== location.origin) return;
+
+  // ネット優先、失敗時（オフライン）はキャッシュを返す
+  e.respondWith(
+    fetch(req)
+      .then((res) => {
+        if (res && res.ok) {
+          const copy = res.clone();
+          caches.open(CACHE).then((c) => c.put(req, copy));
+        }
+        return res;
+      })
+      .catch(() =>
+        caches.match(req).then((hit) => hit || (req.mode === 'navigate' ? caches.match('./index.html') : undefined))
+      )
+  );
 });
