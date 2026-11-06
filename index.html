@@ -113,8 +113,26 @@ button.pt{padding:4px 8px}
 input[type=text],input[type=date],select{font:inherit;color:var(--tx);background:#fff;border:1px solid var(--bd);border-radius:10px;padding:8px 10px;min-width:0}
 input[type=text]{flex:1}
 .cnt{font-weight:700;font-size:20px;color:var(--ac)}
+.tabs{display:flex;gap:6px;margin-bottom:12px}
+.tabs button{flex:1;padding:10px;font-weight:700}
+.tabs button.on{background:var(--ac);border-color:var(--ac);color:#fff}
+.mrow{background:var(--card);border:1px solid var(--bd);border-radius:12px;padding:10px 12px;margin-bottom:8px}
+.mh{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.mh b{font-size:16px;overflow-wrap:anywhere}
+.mh input{flex:1}
+.mst{font-size:12px;color:var(--sub);margin-top:6px;overflow-wrap:anywhere}
+.rb{display:flex;gap:6px;margin-top:8px}
+.rb button{flex:1;padding:8px 4px;font-size:14px;font-weight:600}
+.rb button.on{background:var(--col);border-color:var(--col);color:#fff}
+.sc.sm{padding:5px 10px;font-size:13px}
+.gh{font-size:13px;font-weight:700;color:var(--sub);margin:16px 0 6px}
+.mrow.ab{opacity:.55}
+.mk-lbl{font-size:13px;font-weight:600;color:var(--sub)}
+#mks{flex:1}
 </style></head>
 <body><main>
+<div class="tabs"><button id="tab1" data-tab="0" class="on">種目</button><button id="tab2" data-tab="1">マシン評価</button><button id="tab3" data-tab="2">同期</button></div>
+<div id="ta">
 <div class="ynote" id="yn" hidden></div>
 <div class="bar" style="margin-top:0"><span class="dl" id="dl"></span><span class="cnt" id="cnt" style="margin-left:auto"></span></div>
 <div class="bar"><button id="cb" aria-expanded="false">Calendar</button><button id="dp" aria-label="前の日">‹</button><button id="dn" aria-label="次の日">›</button><button id="tb" hidden>今日</button><input type="date" id="dt" hidden></div>
@@ -131,6 +149,20 @@ input[type=text]{flex:1}
 <input type="text" id="nn" placeholder="種目名" maxlength="30">
 <button class="p" id="add">追加</button>
 </div>
+</div>
+<div id="tbp" hidden>
+<div class="bar" style="margin-top:0"><span class="dl">マシン評価</span><span class="cnt" id="mcnt" style="margin-left:auto"></span></div>
+<div class="sub" style="margin-top:12px">店舗</div>
+<div class="stc" id="mfs"></div>
+<div class="bar" id="mkl"></div>
+<div class="bar"><select id="mrf"><option value="">評価：すべて</option><option value="want">使いたい</option><option value="good">効く</option><option value="unk">分からない</option><option value="none">未評価</option></select><button id="med">編集</button></div>
+<div id="ml" style="margin-top:6px"></div>
+<h2>マシンを追加</h2>
+<div class="bar" style="margin-top:0"><input type="text" id="mn" placeholder="マシン名（例：チェストプレス）" maxlength="30"><button class="p" id="madd">追加</button></div>
+<div class="sub" id="mhint" style="margin-top:6px"></div>
+<div id="mmg"></div>
+</div>
+<div id="tsy" hidden>
 <h2>同期</h2>
 <div class="bar" style="margin-top:0"><button id="exp">Out</button><button id="impb">In</button><input type="file" id="imp" accept=".json,application/json" hidden></div>
 <div class="sub" id="sm" style="margin-top:8px"></div>
@@ -140,12 +172,14 @@ input[type=text]{flex:1}
 <div class="bar"><button class="p" id="cc">接続</button><button id="cn" hidden>今すぐ同期</button><button id="cx" hidden>切断</button></div>
 <details><summary>設定のしかた</summary>
 <div style="margin-top:6px;line-height:1.7">1. GitHubで、記録専用の「プライベート」リポジトリを新しく作ります（例：workout-data）。公開（Public）にはしないでください。<br>2. GitHubの Settings → Developer settings → Personal access tokens → Fine-grained tokens で、新しいトークンを作ります。対象はそのリポジトリだけ、権限は Contents: Read and write だけにします。<br>3. 上の欄に「ユーザー名/リポジトリ名」とトークンを入れて「接続」を押します。2台目以降の端末も、同じ手順で接続します。<br>トークンは、この端末のブラウザにだけ保存されます。</div></details>
+</div>
 </main>
 <div class="md" id="md" hidden><div class="box"><div id="mt"></div><div class="sub">削除すると元に戻せません。</div>
 <div class="bar"><button id="mc">キャンセル</button><button class="x sure" id="mo">削除する</button></div></div></div>
 <script>
-var KEY='workout-v1',edit=false,pend=null;
+var KEY='workout-v1',edit=false,pend=null,mTab=0,mf='',mrf='',mEdit=false,pendM=null,pendK=null;
 var M=['大胸筋','広背筋','脊柱起立筋','僧帽筋','三角筋','上腕二頭筋','上腕三頭筋','前腕筋群','腹直筋','腹斜筋','大臀筋','中臀筋','大腿四頭筋','ハムストリングス','内転筋','下腿三頭筋','前脛骨筋'];
+var RT=[['want','使いたい'],['good','効く'],['unk','分からない']],RC={want:'#2563eb',good:'#4d7c0f',unk:'#6b7280'},RATES=['want','good','unk'];
 var BACK=['僧帽筋','広背筋','脊柱起立筋','上腕三頭筋','大臀筋','中臀筋','ハムストリングス','下腿三頭筋'];
 var OLD={'胸':'大胸筋','背中':'広背筋','肩':'三角筋','腕':'上腕二頭筋','腹筋':'腹直筋','脚':'大腿四頭筋'};
 var KW=[['腹斜筋',['腹斜','ツイスト','サイドベンド','サイドクランチ','サイドプランク','オブリーク','ウッドチョップ']],
@@ -174,10 +208,41 @@ try{S=JSON.parse(localStorage.getItem(KEY)||'null')}catch(e){S=null}
 if(!S||!Array.isArray(S.ex)){S={ex:DEF.map(function(n,i){return{id:'e'+i,name:n,dates:[]}})}}
 if(!Array.isArray(S.stores))S.stores=[{id:'s0',name:'稲沢公園前店',c:0},{id:'s1',name:'一宮妙興寺店',c:1},{id:'s2',name:'一宮尾西店',c:2}];
 if(!S.visits||typeof S.visits!=='object')S.visits={};
+if(!Array.isArray(S.machines))S.machines=[];
 S.ex.forEach(function(e){
   if(M.indexOf(e.part)<0){var g=guess(e.name);e.part=g||OLD[e.part]||''}
 });
-function save(){S.rev=Date.now();try{localStorage.setItem(KEY,JSON.stringify(S))}catch(e){}if(typeof cloudMark==='function')cloudMark()}
+function mkId(){return 'k'+Date.now()+Math.floor(Math.random()*1e6)}
+function fixMachines(){
+  if(!Array.isArray(S.makers))S.makers=[];
+  S.makers=S.makers.filter(function(k){return k&&typeof k.name==='string'&&k.id});
+  S.machines=S.machines.filter(function(m){return m&&typeof m.name==='string'&&m.id});
+  S.machines.forEach(function(m){
+    if(M.indexOf(m.part)<0)m.part=guess(m.name)||'';
+    if(RATES.indexOf(m.rate)<0)m.rate='';
+    if(!Array.isArray(m.ab))m.ab=[];
+    delete m.stores;
+    if(!S.makers.some(function(k){return k.id===m.mk})){
+      var u=S.makers.find(function(k){return k.name==='未設定'});
+      if(!u){u={id:mkId(),name:'未設定'};S.makers.push(u)}
+      m.mk=u.id;
+    }
+  });
+  S.stores.forEach(function(st){if(st.mk&&!S.makers.some(function(k){return k.id===st.mk}))st.mk=''});
+  ensureCommon();
+}
+function ensureCommon(){
+  S.makers.forEach(function(k){
+    S.ex.forEach(function(e){
+      if(e.hid)return;
+      var m=S.machines.find(function(q){return q.mk===k.id&&q.name===e.name});
+      if(!m)S.machines.push({id:'m'+Date.now()+Math.floor(Math.random()*1e9),name:e.name,part:e.part||'',mk:k.id,ab:[],rate:''});
+      else if(e.part&&m.part!==e.part)m.part=e.part;
+    });
+  });
+}
+fixMachines();
+function save(){ensureCommon();S.rev=Date.now();try{localStorage.setItem(KEY,JSON.stringify(S))}catch(e){}if(typeof cloudMark==='function')cloudMark()}
 var dt=document.getElementById('dt');dt.value=ymd(new Date());
 function esc(s){return s.replace(/[&<>"]/g,function(c){return{'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]})}
 var PD={
@@ -280,7 +345,7 @@ function row(ex){
   (edit?'<button class="x" data-x="'+ex.id+'">✕</button>':'')+'</div></div></div>';
 }
 function render(){
-  renderHead();renderCal();renderStores();renderYesterday();
+  renderHead();renderCal();renderStores();renderYesterday();renderMachines();
   var dd=dt.value;
   document.getElementById('cnt').textContent=S.ex.filter(function(e){return e.dates.indexOf(dd)>=0}).length+'/3';
   var sorted=sortList(),shown=edit?sorted:sorted.filter(function(e){return !e.hid});
@@ -315,13 +380,14 @@ function pack(){
   var nm={},vis={};
   S.stores.forEach(function(st){nm[st.id]=st.name});
   Object.keys(S.visits).forEach(function(k){var a=S.visits[k].map(function(id){return nm[id]}).filter(Boolean);if(a.length)vis[k]=a});
-  return JSON.stringify({app:'workout',v:2,exportedAt:new Date().toISOString(),ex:S.ex,stores:S.stores.map(function(st){return{name:st.name,c:st.c}}),visits:vis});
+  var mc=S.machines.map(function(m){return{name:m.name,part:m.part,rate:m.rate,maker:mkName(m.mk),absent:m.ab.map(function(id){return nm[id]}).filter(Boolean)}});
+  return JSON.stringify({app:'workout',v:2,exportedAt:new Date().toISOString(),ex:S.ex,stores:S.stores.map(function(st){return{name:st.name,c:st.c,maker:mkName(st.mk)}}),visits:vis,machines:mc});
 }
 function importText(txt,quiet){
   try{
     var j=JSON.parse(txt);
     if(!j||j.app!=='workout'||!Array.isArray(j.ex))throw 0;
-    var ae=0,ad=0,ag=0,av=0,pg=[],map={};
+    var ae=0,ad=0,ag=0,av=0,am=0,pg=[],map={};
     j.ex.forEach(function(x){
       if(!x||typeof x.name!=='string')return;
       var nm=x.name.trim().slice(0,30);if(!nm)return;
@@ -342,7 +408,17 @@ function importText(txt,quiet){
         st={id:'s'+Date.now()+Math.floor(Math.random()*1e6),name:n,c:c};S.stores.push(st)}
       return st;
     }
-    (Array.isArray(j.stores)?j.stores:[]).forEach(function(x){if(x&&typeof x.name==='string')ensureStore(x.name)});
+    function ensureMaker(n){
+      n=String(n||'').trim().slice(0,20);if(!n)return null;
+      var k=S.makers.find(function(q){return q.name===n});
+      if(!k){k={id:mkId(),name:n};S.makers.push(k)}
+      return k;
+    }
+    (Array.isArray(j.stores)?j.stores:[]).forEach(function(x){
+      if(!x||typeof x.name!=='string')return;
+      var st=ensureStore(x.name),k=x.maker?ensureMaker(x.maker):null;
+      if(st&&k&&!st.mk)st.mk=k.id;
+    });
     if(j.visits&&typeof j.visits==='object')Object.keys(j.visits).forEach(function(d){
       if(!/^\d{4}-\d{2}-\d{2}$/.test(d)||!Array.isArray(j.visits[d]))return;
       j.visits[d].forEach(function(n){
@@ -352,8 +428,21 @@ function importText(txt,quiet){
         if(a.indexOf(st.id)<0){a.push(st.id);av++}
       });
     });
+    (Array.isArray(j.machines)?j.machines:[]).forEach(function(x){
+      if(!x||typeof x.name!=='string')return;
+      var n=x.name.trim().slice(0,30);if(!n)return;
+      var k=ensureMaker(x.maker||'未設定');if(!k)return;
+      var t=S.machines.find(function(m){return m.name===n&&m.mk===k.id});
+      if(!t){t={id:'m'+Date.now()+Math.floor(Math.random()*1e6),name:n,part:M.indexOf(x.part)>=0?x.part:guess(n),mk:k.id,ab:[],rate:''};S.machines.push(t);am++}
+      if(!t.rate&&RATES.indexOf(x.rate)>=0)t.rate=x.rate;
+      if(!t.part&&M.indexOf(x.part)>=0)t.part=x.part;
+      (Array.isArray(x.absent)?x.absent:[]).forEach(function(sn){
+        var st=typeof sn==='string'?ensureStore(sn):null;
+        if(st&&t.ab.indexOf(st.id)<0)t.ab.push(st.id);
+      });
+    });
     save();render();
-    if(!quiet)setMsg('取り込みました（種目 '+ae+' 件、記録 '+ad+' 件を追加'+(ag?'、同じ扱い '+ag+' 件':'')+(av?'、店舗の記録 '+av+' 件':'')+'）');
+    if(!quiet)setMsg('取り込みました（種目 '+ae+' 件、記録 '+ad+' 件を追加'+(ag?'、同じ扱い '+ag+' 件':'')+(av?'、店舗の記録 '+av+' 件':'')+(am?'、マシン '+am+' 件':'')+'）');
     return true;
   }catch(e){if(!quiet)setMsg('読み込めませんでした。Outで保存したファイルを選んでください。');return false}
 }
@@ -440,6 +529,8 @@ function addStore(){
 function delStore(id){
   S.stores=S.stores.filter(function(q){return q.id!==id});
   Object.keys(S.visits).forEach(function(k){S.visits[k]=S.visits[k].filter(function(x){return x!==id});if(!S.visits[k].length)delete S.visits[k]});
+  S.machines.forEach(function(m){m.ab=m.ab.filter(function(x){return x!==id})});
+  if(mf===id)mf='';
   save();
 }
 document.body.addEventListener('click',function(e){
@@ -456,6 +547,117 @@ document.body.addEventListener('change',function(e){
     save();render()}
 });
 document.body.addEventListener('keydown',function(e){if(e.key==='Enter'&&e.target.id==='sn')addStore()});
+/* ---- マシン評価タブ ---- */
+var RL={want:'使いたい',good:'効く',unk:'分からない'};
+function mfind(id){return S.machines.find(function(m){return m.id===id})}
+function curStore(){return S.stores.find(function(q){return q.id===mf})}
+function mkName(id){var k=S.makers.find(function(q){return q.id===id});return k?k.name:''}
+function mrow(m,st){
+  var gone=m.ab.indexOf(st.id)>=0,top;
+  var oth=S.machines.filter(function(o){return o.name===m.name&&o.mk!==m.mk&&o.rate}).map(function(o){return esc(mkName(o.mk))+'：'+RL[o.rate]}).join('　');
+  var lk=S.ex.some(function(e){return e.name===m.name});
+  if(mEdit){
+    top=(lk?'<div class="mh"><b>'+esc(m.name)+'</b><span class="pt">種目と連動</span></div>':'<div class="mh"><input type="text" maxlength="30" data-mnm="'+m.id+'" value="'+esc(m.name)+'"><button class="x" data-mx="'+m.id+'">✕</button></div>')+
+      '<div class="mh" style="margin-top:6px">'+(lk?'<span class="pt">'+(m.part||'未分類')+'</span>':'<select class="pt" data-mp="'+m.id+'">'+M.map(function(p){return '<option'+(p===m.part?' selected':'')+'>'+p+'</option>'}).join('')+(m.part?'':'<option selected>未分類</option>')+'</select>')+'<button class="vb" data-ma="'+m.id+'">'+(gone?'この店舗にある状態に戻す':'この店舗にはない')+'</button></div>';
+  }else{
+    top='<div class="mh"><b>'+esc(m.name)+'</b></div>';
+  }
+  return '<div class="mrow'+(gone?' ab':'')+'">'+top+(oth?'<div class="mst">他メーカー　'+oth+'</div>':'')+'<div class="rb">'+RT.map(function(r){
+    return '<button class="'+(m.rate===r[0]?'on':'')+'" style="--col:'+RC[r[0]]+'" data-mr="'+m.id+'|'+r[0]+'">'+r[1]+'</button>';
+  }).join('')+'</div></div>';
+}
+function renderMachines(){
+  var ta=document.getElementById('ta'),tp=document.getElementById('tbp');
+  ta.hidden=mTab!==0;tp.hidden=mTab!==1;document.getElementById('tsy').hidden=mTab!==2;
+  document.getElementById('tab1').classList.toggle('on',mTab===0);
+  document.getElementById('tab2').classList.toggle('on',mTab===1);
+  document.getElementById('tab3').classList.toggle('on',mTab===2);
+  if(mTab!==1)return;
+  if(!curStore()&&S.stores.length)mf=S.stores[0].id;
+  var st=curStore();
+  document.getElementById('mfs').innerHTML=S.stores.length?S.stores.map(function(q){
+    return '<button class="sc'+(mf===q.id?' on':'')+'" style="--col:'+scol(q)+'" data-mf="'+q.id+'"><i></i>'+esc(q.name)+'</button>';
+  }).join(''):'<span class="sub">店舗がありません。「種目」タブの「編集」で追加できます。</span>';
+  document.getElementById('mkl').innerHTML=st?'<span class="mk-lbl">この店舗のメーカー</span><select id="mks"><option value="">未設定</option>'+S.makers.map(function(k){
+    return '<option value="'+k.id+'"'+(k.id===st.mk?' selected':'')+'>'+esc(k.name)+'</option>';
+  }).join('')+'</select>':'';
+  document.getElementById('mrf').value=mrf;
+  document.getElementById('med').textContent=mEdit?'編集を終了':'編集';
+  var list=[];
+  if(st&&st.mk)list=S.machines.filter(function(m){
+    return m.mk===st.mk&&(mEdit||m.ab.indexOf(st.id)<0)&&(!mrf||(mrf==='none'?!m.rate:m.rate===mrf));
+  }).sort(function(a,b){
+    var x=M.indexOf(a.part),y=M.indexOf(b.part);x=x<0?99:x;y=y<0?99:y;
+    return x-y||a.name.localeCompare(b.name,'ja');
+  });
+  document.getElementById('mcnt').textContent=list.filter(function(m){return m.ab.indexOf(st.id)<0}).length+'台';
+  var h='',lp=null;
+  list.forEach(function(m){var p=m.part||'未分類';if(p!==lp){h+='<div class="gh">'+p+'</div>';lp=p}h+=mrow(m,st)});
+  if(!h&&st)h='<div class="sub" style="margin-top:10px">'+(!st.mk?'この店舗のメーカーを選ぶと、マシンを記録できます。メーカーがまだ無い場合は「編集」で追加できます。':S.machines.some(function(m){return m.mk===st.mk})?'条件に合うマシンがありません。':'マシンを追加してください。')+'</div>';
+  document.getElementById('ml').innerHTML=h;
+  document.getElementById('mhint').textContent=st&&st.mk?'追加すると、「'+mkName(st.mk)+'」のマシンとして登録されます（同じメーカーの店舗で共通です）。':'';
+  var kv=document.getElementById('kn');kv=kv?kv.value:'';
+  document.getElementById('mmg').innerHTML=mEdit?'<h2>メーカーの管理</h2><div class="cbox">'+S.makers.map(function(k){
+    return '<div class="ser"><input type="text" maxlength="20" data-kn="'+k.id+'" value="'+esc(k.name)+'"><button class="x" data-kx="'+k.id+'">✕</button></div>';
+  }).join('')+'<div class="sub" style="margin-top:6px">新しいメーカーを追加（種目名と、今のメーカーに共通するマシン名が、評価なしで入ります）</div><div class="bar"><input type="text" id="kn" maxlength="20" placeholder="メーカー名" value="'+esc(kv)+'"><button class="p" id="kadd">追加</button></div></div>':'';
+}
+function addMachine(){
+  var st=curStore();if(!st||!st.mk)return;
+  var i=document.getElementById('mn'),v=i.value.trim().slice(0,30);if(!v)return;
+  var d=S.machines.find(function(m){return m.name===v&&m.mk===st.mk});
+  if(d){var ix=d.ab.indexOf(st.id);if(ix>=0){d.ab.splice(ix,1);save()}}
+  else{S.machines.push({id:'m'+Date.now()+Math.floor(Math.random()*1e6),name:v,part:guess(v),mk:st.mk,ab:[],rate:''});save()}
+  i.value='';render();
+}
+function addMaker(){
+  var i=document.getElementById('kn'),v=i.value.trim().slice(0,20);if(!v)return;
+  if(S.makers.some(function(k){return k.name===v}))return;
+  var base=null,part={};
+  S.makers.forEach(function(k2){
+    var set={};
+    S.machines.forEach(function(m){if(m.mk===k2.id){set[m.name]=1;if(!part[m.name])part[m.name]=m.part}});
+    if(base===null)base=set;else Object.keys(base).forEach(function(n){if(!set[n])delete base[n]});
+  });
+  var k={id:mkId(),name:v};
+  S.makers.push(k);
+  Object.keys(base||{}).forEach(function(n){
+    S.machines.push({id:'m'+Date.now()+Math.floor(Math.random()*1e9),name:n,part:part[n]||'',mk:k.id,ab:[],rate:''});
+  });
+  var st=curStore();if(st&&!st.mk)st.mk=k.id;
+  i.value='';save();render();
+}
+document.body.addEventListener('click',function(e){
+  var b=e.target.closest('[data-tab]');if(b){mTab=+b.getAttribute('data-tab');render();return}
+  var f=e.target.closest('[data-mf]');if(f){mf=f.getAttribute('data-mf');render();return}
+  var r=e.target.closest('[data-mr]');
+  if(r){var a=r.getAttribute('data-mr').split('|'),m=mfind(a[0]);if(m){m.rate=m.rate===a[1]?'':a[1];save();render()}return}
+  var g=e.target.closest('[data-ma]');
+  if(g){var m2=mfind(g.getAttribute('data-ma')),st=curStore();if(m2&&st){var i=m2.ab.indexOf(st.id);if(i>=0)m2.ab.splice(i,1);else m2.ab.push(st.id);save();render()}return}
+  var x=e.target.closest('[data-mx]');
+  if(x){var m3=mfind(x.getAttribute('data-mx'));if(m3){pendM=m3.id;pend=null;pendS=null;pendK=null;document.getElementById('mt').textContent='「'+m3.name+'」を削除しますか？（同じメーカーの全店舗から消えます）';document.getElementById('md').hidden=false}return}
+  var kx=e.target.closest('[data-kx]');
+  if(kx){var k=S.makers.find(function(q){return q.id===kx.getAttribute('data-kx')});if(k){pendK=k.id;pendM=null;pend=null;pendS=null;document.getElementById('mt').textContent='メーカー「'+k.name+'」を削除しますか？（このメーカーのマシンと評価も消えます）';document.getElementById('md').hidden=false}return}
+  if(e.target.closest('#madd')){addMachine();return}
+  if(e.target.closest('#kadd')){addMaker();return}
+  if(e.target.closest('#med')){mEdit=!mEdit;render()}
+});
+document.body.addEventListener('change',function(e){
+  var t=e.target;if(!t||!t.closest)return;
+  var n=t.closest('[data-mnm]');
+  if(n){var m=mfind(n.getAttribute('data-mnm')),v=n.value.trim().slice(0,30);
+    if(m&&v&&!S.machines.some(function(q){return q!==m&&q.mk===m.mk&&q.name===v}))m.name=v;
+    save();render();return}
+  var p=t.closest('[data-mp]');
+  if(p){var m2=mfind(p.getAttribute('data-mp'));if(m2&&M.indexOf(p.value)>=0){m2.part=p.value;save();render()}return}
+  var kn=t.closest('[data-kn]');
+  if(kn){var k=S.makers.find(function(q){return q.id===kn.getAttribute('data-kn')}),kv=kn.value.trim().slice(0,20);
+    if(k&&kv&&!S.makers.some(function(q){return q!==k&&q.name===kv}))k.name=kv;
+    save();render();return}
+  if(t.id==='mks'){var st=curStore();if(st){st.mk=t.value;save();render()}return}
+  if(t.id==='mrf'){mrf=t.value;render()}
+});
+document.getElementById('mn').addEventListener('keydown',function(e){if(e.key==='Enter')addMachine()});
+document.body.addEventListener('keydown',function(e){if(e.key==='Enter'&&e.target.id==='kn')addMaker()});
 try{localStorage.removeItem('workout-notify')}catch(e){}
 function renderYesterday(){
   var el=document.getElementById('yn');if(!el)return;
@@ -472,22 +674,29 @@ function b64e(str){var b=new TextEncoder().encode(str),t='';for(var i=0;i<b.leng
 function b64d(t){var x=atob(String(t).replace(/\s/g,'')),b=new Uint8Array(x.length);for(var i=0;i<x.length;i++)b[i]=x.charCodeAt(i);return new TextDecoder().decode(b)}
 function ghUrl(){return 'https://api.github.com/repos/'+CS.repo+'/contents/workout-data.json'}
 function ghHead(){return {'Authorization':'Bearer '+CS.token,'Accept':'application/vnd.github+json','X-GitHub-Api-Version':'2022-11-28'}}
-function snapshot(){return JSON.stringify({app:'workout',v:3,rev:S.rev||0,ex:S.ex,stores:S.stores,visits:S.visits})}
+function snapshot(){return JSON.stringify({app:'workout',v:3,rev:S.rev||0,ex:S.ex,stores:S.stores,visits:S.visits,makers:S.makers,machines:S.machines})}
 function setCloud(t){var el=document.getElementById('cs');if(el)el.textContent=t}
 function nowHM(){var d=new Date();return ('0'+d.getHours()).slice(-2)+':'+('0'+d.getMinutes()).slice(-2)}
-function localEmpty(){return S.ex.every(function(e){return !e.dates.length})&&!Object.keys(S.visits).length}
+function localEmpty(){return S.ex.every(function(e){return !e.dates.length})&&!Object.keys(S.visits).length&&!S.machines.length}
 function toPack(d){
-  var nm={},vis={};
+  var nm={},vis={},kn={};
+  (d.makers||[]).forEach(function(k){kn[k.id]=k.name});
   (d.stores||[]).forEach(function(x){nm[x.id]=x.name});
   Object.keys(d.visits||{}).forEach(function(k){var a=(d.visits[k]||[]).map(function(id){return nm[id]}).filter(Boolean);if(a.length)vis[k]=a});
-  return {app:'workout',v:2,ex:d.ex||[],stores:(d.stores||[]).map(function(x){return{name:x.name,c:x.c}}),visits:vis};
+  var mc=(Array.isArray(d.machines)?d.machines:[]).filter(function(m){return m&&typeof m.name==='string'}).map(function(m){
+    return{name:m.name,part:m.part,rate:m.rate,maker:kn[m.mk]||'',absent:(Array.isArray(m.ab)?m.ab:[]).map(function(id){return nm[id]}).filter(Boolean)};
+  });
+  return {app:'workout',v:2,ex:d.ex||[],stores:(d.stores||[]).map(function(x){return{name:x.name,c:x.c,maker:kn[x.mk]||''}}),visits:vis,machines:mc};
 }
 function adopt(d){
   S.ex=(Array.isArray(d.ex)?d.ex:[]).filter(function(e){return e&&typeof e.name==='string'&&e.id});
   S.stores=Array.isArray(d.stores)?d.stores.filter(function(x){return x&&typeof x.name==='string'&&x.id}):[];
   S.visits=(d.visits&&typeof d.visits==='object')?d.visits:{};
+  if(Array.isArray(d.makers))S.makers=d.makers;
+  if(Array.isArray(d.machines))S.machines=d.machines;
   S.rev=+d.rev||0;
   S.ex.forEach(function(e){if(!Array.isArray(e.dates))e.dates=[];if(M.indexOf(e.part)<0)e.part=guess(e.name)||''});
+  fixMachines();
   try{localStorage.setItem(KEY,JSON.stringify(S))}catch(e){}
   render();
 }
@@ -562,11 +771,13 @@ document.addEventListener('visibilitychange',function(){if(!document.hidden)clou
 window.addEventListener('online',function(){cloudSync()});
 renderCloud();
 if(CS.repo&&CS.token){setCloud('接続中：'+CS.repo+(CS.last?'　最終同期 '+CS.last:''));cloudSync()}
-function closeMd(){pend=null;pendS=null;document.getElementById('md').hidden=true}
+function closeMd(){pend=null;pendS=null;pendM=null;pendK=null;document.getElementById('md').hidden=true}
 document.getElementById('mc').onclick=closeMd;
 document.getElementById('md').addEventListener('click',function(e){if(e.target===this)closeMd()});
 document.getElementById('mo').onclick=function(){
-  if(pendS){delStore(pendS)}
+  if(pendK){var kid=pendK;S.machines=S.machines.filter(function(q){return q.mk!==kid});S.makers=S.makers.filter(function(q){return q.id!==kid});S.stores.forEach(function(q){if(q.mk===kid)q.mk=''});save()}
+  else if(pendM){S.machines=S.machines.filter(function(q){return q.id!==pendM});save()}
+  else if(pendS){delStore(pendS)}
   else if(pend){S.ex=S.ex.filter(function(q){return q.id!==pend});save()}
   closeMd();render();
 };
